@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; }
+        #game-ui {
+            position: absolute; top: 20px; left: 20px;
+            font-family: 'Courier New', Courier, monospace;
+            color: #00ff00; text-shadow: 2px 2px #000;
+            pointer-events: none; z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-ui">
+        <div>PLAYER: JAMES</div>
+        <div>AURA: <span id="aura">50</span></div>
+        <div>DRIP: JORDAN 1s (SPEED +5)</div>
+    </div>
+    <script>
+    const config = {
+        type: Phaser.AUTO,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        physics: {
+            default: 'arcade',
+            arcade: { gravity: { y: 0 }, debug: false }
+        },
+        scene: { preload: preload, create: create, update: update }
+    };
+
+    let james;
+    let cursors;
+    let field;
+    let aura = 50;
+
+    const game = new Phaser.Game(config);
+
+    function preload() {
+        // In a real game, you'd load your custom James sprite here
+        // this.load.image('james', 'assets/james_topdown.png');
+    }
+
+    function create() {
+        // 1. Create a HUGE grass field
+        const worldSize = 4000;
+        this.cameras.main.setBounds(0, 0, worldSize, worldSize);
+        this.physics.world.setBounds(0, 0, worldSize, worldSize);
+
+        // Draw green grass pattern
+        let graphics = this.add.graphics();
+        graphics.fillStyle(0x27ae60, 1);
+        graphics.fillRect(0, 0, worldSize, worldSize);
+        
+        // Draw Yard Lines
+        graphics.lineStyle(4, 0xffffff, 0.3);
+        for(let i = 0; i < worldSize; i += 200) {
+            graphics.lineBetween(i, 0, i, worldSize);
+        }
+
+        // 2. Create James (The Main Character)
+        // We use a triangle shape to show which way he is facing
+        james = this.add.rectangle(400, 400, 40, 60, 0x00ff00);
+        this.physics.add.existing(james);
+        james.body.setCollideWorldBounds(true);
+
+        // 3. Make the Camera follow James
+        this.cameras.main.startFollow(james, true, 0.05, 0.05);
+
+        // 4. Input
+        cursors = this.input.keyboard.createCursorKeys();
+        this.keys = this.input.keyboard.addKeys('W,A,S,D');
+    }
+
+    function update() {
+        const speed = 350;
+        james.body.setVelocity(0);
+
+        // 8-Directional Movement Logic
+        if (cursors.left.isDown || this.keys.A.isDown) {
+            james.body.setVelocityX(-speed);
+            james.angle = -90;
+        } else if (cursors.right.isDown || this.keys.D.isDown) {
+            james.body.setVelocityX(speed);
+            james.angle = 90;
+        }
+
+        if (cursors.up.isDown || this.keys.W.isDown) {
+            james.body.setVelocityY(-speed);
+            james.angle = 0;
+        } else if (cursors.down.isDown || this.keys.S.isDown) {
+            james.body.setVelocityY(speed);
+            james.angle = 180;
+        }
+
+        // Diagonals (Facing corners)
+        if ((cursors.up.isDown || this.keys.W.isDown) && (cursors.right.isDown || this.keys.D.isDown)) james.angle = 45;
+        if ((cursors.up.isDown || this.keys.W.isDown) && (cursors.left.isDown || this.keys.A.isDown)) james.angle = -45;
+    }
+    </script>
+</body>
+</html>
